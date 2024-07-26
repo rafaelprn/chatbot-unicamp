@@ -9,5 +9,5 @@ completion = client.chat.completions.create(
     {"role": "user", "content": "Compose a poem that explains the concept of recursion in programming."}
   ]
 )
-
+ 
 print(completion.choices[0].message)
