@@ -7,14 +7,15 @@ client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
 )
 
-chat_completion = client.chat.completions.create(
+def enviar_msg(mensagem):
+  chat_completion = client.chat.completions.create(
     messages=[
         {
-            "role": "user",
-            "content": "Explain the importance of fast language models",
+            "role": "user", "content": mensagem
         }
     ],
     model="llama3-8b-8192",
-)
+  )
+  return chat_completion.choices[0].message.content
 
-print(chat_completion.choices[0].message.content)
+print(enviar_msg("Define the use of fast language models."))
