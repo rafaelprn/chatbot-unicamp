@@ -1,13 +1,20 @@
-from openai import OpenAI
+import os
+from groq import Groq
+from dotenv import load_dotenv
+load_dotenv()
 
-client = OpenAI()
-
-completion = client.chat.completions.create(
-  model="gpt-4o-mini",
-  messages=[
-    {"role": "system", "content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."},
-    {"role": "user", "content": "Compose a poem that explains the concept of recursion in programming."}
-  ]
+client = Groq(
+    api_key=os.environ.get("GROQ_API_KEY"),
 )
 
-print(completion.choices[0].message)
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            "role": "user",
+            "content": "Explain the importance of fast language models",
+        }
+    ],
+    model="llama3-8b-8192",
+)
+
+print(chat_completion.choices[0].message.content)
