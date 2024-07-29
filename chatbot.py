@@ -7,23 +7,36 @@ client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
 )
 
-def enviar_msg(mensagem, lista_mensagens=[]):
-  lista_mensagens.append(
-    {"role": "user", "content": mensagem}
-  )
-  resposta = client.chat.completions.create(
-    messages= lista_mensagens,
-    model="llama3-8b-8192",
-  )
-  return resposta.choices[0].message.content
+# Inicializando prompt do sistema
+system_prompt = {
+    "role": "system",
+    "content":
+    "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair."
+}
 
-lista_mensagens = []
-while True: #TODO: arrumar erro na segunda pergunta (langchain?)
-  texto = input("Escreva sua mensagem: ")
-  
-  if texto == "sair":
+# Inicializando o historico do chat
+chat_history = [system_prompt]
+
+while True:
+  user_input = input("Escreva aqwi sua mensagem: ")
+
+  if user_input=="sair":
     break
+  
   else:
-    resposta = enviar_msg(texto, lista_mensagens)
-    lista_mensagens.append(resposta)
-    print("Chatbot: ", resposta)
+    # Adicionar mensagem do usuario ao historico do chat
+    chat_history.append({"role": "user", "content": user_input})
+
+    response = client.chat.completions.create(
+      model="llama3-70b-8192",
+      messages=chat_history,
+      max_tokens=200,
+      temperature=1.2
+    )
+    # Adicionar resposta do chatbot ao historico do chat
+    chat_history.append({
+        "role": "assistant",
+        "content": response.choices[0].message.content
+    })
+    # Imprimir a resposta no console
+    print("Chatbot:", response.choices[0].message.content)
