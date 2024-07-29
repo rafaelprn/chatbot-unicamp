@@ -20,7 +20,8 @@ chat_history = [system_prompt]
 while True:
   user_input = input("Escreva aqwi sua mensagem: ")
 
-  if user_input=="sair":
+  if user_input.lower()=="sair":
+    print("Conversa Encerrada!")
     break
   
   else:
