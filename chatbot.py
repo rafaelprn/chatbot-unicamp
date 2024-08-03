@@ -2,7 +2,7 @@ import os
 from groq import Groq
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyMuPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.llms.base import LLM
@@ -48,19 +48,31 @@ chat_history = [system_prompt]
 def carregar_pdf(caminho_pdf):
     doc = pymupdf.open(caminho_pdf)
 
-    text = ""
-    for page in doc:
-        text += page.get_text()
-        
-    print(text)
-    print("////////////////////")
-    print(doc)
+    raw_text = extrair_texto(caminho_pdf)
+    text_chunks = extrair_trechos_texto(raw_text) #retorna uma lista de strings
+    print(text_chunks)
+
     doc.close()
     # splitter = RecursiveCharacterTextSplitter()
     # docs_divididos = splitter.split_documents(doc)
     # return docs_divididos
 
+def extrair_texto(caminho_pdf):
+    doc = pymupdf.open(caminho_pdf)
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    return text
     
+def extrair_trechos_texto(raw_text):
+    text_splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+    )
+    chunks = text_splitter.split_text(raw_text)
+    return chunks
 
 # Função para responder perguntas usando o LangChain
 # def responder_pergunta(pergunta, docs_divididos, llm):
