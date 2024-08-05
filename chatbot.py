@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from typing import Generator
 from groq import Groq
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -15,7 +16,7 @@ from langchain.chains import ConversationalRetrievalChain
 #from langchain_community.llms import GroqLLM
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
-from htmlTemplates import css, bot_template, user_template
+# from htmlTemplates import css, bot_template, user_template
 #from langchain.chat_models import ChatGroq
 import pymupdf
 
@@ -105,45 +106,113 @@ system_prompt = {
     Abaixo estão os documentos com as informações disponíveis acerca do vestibular.
     Caso você não encontre a resposta para a dúvida do usuário, informe-o que não foi possível encontrar a resposta.
     Documentos: {docs_divididos}""" 
-
 }
 chat_history = [system_prompt] #Inicializando o histórico do chat com a mensagem do sistema
-# llm = ChatGroq()
-llm = HuggingFaceHub(repo_id="meta-llama/Meta-Llama-3-70B-Instruct", 
-                     huggingfacehub_api_token=os.environ.get("GROQ_API_KEY"),
-                     model_kwargs={"temperature":0.5, "max_length":512})
+
+st.set_page_config(page_icon="💬", layout="wide",
+                   page_title="Groq Goes Brrrrrrrr...")
 
 
-while True:
-    user_input = input("Escreva aqui sua mensagem: ") #input do usuario
+def icon(emoji: str):
+    """Shows an emoji as a Notion-style page icon."""
+    st.write(
+        f'<span style="font-size: 78px; line-height: 1">{emoji}</span>',
+        unsafe_allow_html=True,
+    )
+icon("🏎️")
+st.subheader("Groq Chat Streamlit App", divider="rainbow", anchor=False)
 
-    if user_input.lower() == "sair": # encerrar o chat
-        break
+# Initialize chat history and selected model
+if "messages" not in st.session_state:
+    st.session_state.messages = [system_prompt]
 
-    else:
-        # Adicionar mensagem do usuário ao histórico do chat
-        chat_history.append({"role": "user", "content": user_input})
+# if "selected_model" not in st.session_state:
+#     st.session_state.selected_model = None
 
-        # Obter resposta da Groq AI
-        response = client.chat.completions.create(
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    avatar = '🤖' if message["role"] == "assistant" else '👨‍💻'
+    if message["role"] == "assistant" or message["role"] == "user":
+        with st.chat_message(message["role"], avatar=avatar):
+            st.markdown(message["content"])
+
+
+def generate_chat_responses(chat_completion) -> Generator[str, None, None]: # Função para gerar respostas do chat
+    """Yield chat response content from the Groq API response.""" # Gera respostas do chat
+    for chunk in chat_completion: # Para cada chunk na resposta do chat
+        if chunk.choices[0].delta.content: # Se houver conteúdo no delta do chunk
+            yield chunk.choices[0].delta.content # Retorna o conteúdo do delta do chunk
+
+
+if prompt := st.chat_input("Enter your prompt here..."): # Input do usuário
+    st.session_state.messages.append({"role": "user", "content": prompt}) # Adiciona a mensagem do usuário ao histórico do chat
+    with st.chat_message("user", avatar='👨‍💻'): 
+        st.markdown(prompt)
+
+    with st.chat_message("assistant", avatar="🤖"):
+        stream = client.chat.completions.create(
             model="llama3-70b-8192",
-            messages=chat_history,
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
             max_tokens=200,
-            temperature=0.5
+            stream=True,
         )
 
-        # Adicionar resposta da AI ao histórico do chat
-        chat_history.append({
-            "role": "assistant",
-            "content": response.choices[0].message.content
-        })
+        chat_responses_generator = generate_chat_responses(stream) # Gera respostas do chat
+        full_response = st.write_stream(chat_responses_generator) # Escreve as respostas do chat
+        if isinstance(full_response, str): # Se a resposta for uma string
+            st.session_state.messages.append( # Adiciona a resposta ao histórico do chat
+                {"role": "assistant", "content": full_response}) 
+#     response = st.write_stream(stream)
+# st.session_state.messages.append(
+#     {"role": "assistant", "content": response})
+    
+    
+    
 
-        # Responder pergunta usando LangChain
-        # resposta_pdf = responder_pergunta(user_input, docs_divididos, llm)
-        # resposta_final = f"{response.choices[0].message.content}\n\nInformações do PDF:\n{resposta_pdf}"
 
-        # Imprimir a resposta no console
-        print("Chatbot:", response.choices[0].message.content)
+
+# while True:
+#     user_input = input("Escreva aqui sua mensagem: ") #input do usuario
+
+#     if user_input.lower() == "sair": # encerrar o chat
+#         break
+
+#     else:
+#         # Adicionar mensagem do usuário ao histórico do chat
+#         chat_history.append({"role": "user", "content": user_input})
+
+#         # Obter resposta da Groq AI
+#         response = client.chat.completions.create(
+#             model="llama3-70b-8192",
+#             messages=chat_history,
+#             max_tokens=200,
+#             temperature=0.5
+#         )
+
+#         # Adicionar resposta da AI ao histórico do chat
+#         chat_history.append({
+#             "role": "assistant",
+#             "content": response.choices[0].message.content
+#         })
+
+#         # Responder pergunta usando LangChain
+#         # resposta_pdf = responder_pergunta(user_input, docs_divididos, llm)
+#         # resposta_final = f"{response.choices[0].message.content}\n\nInformações do PDF:\n{resposta_pdf}"
+
+#         # Imprimir a resposta no console
+#         print("Chatbot:", response.choices[0].message.content)
+
+
+
+
+# # llm = ChatGroq()
+# llm = HuggingFaceHub(repo_id="meta-llama/Meta-Llama-3-70B-Instruct", 
+#                      huggingfacehub_api_token=os.environ.get("GROQ_API_KEY"),
+#                      model_kwargs={"temperature":0.5, "max_length":512})
+
 
 # def main():
 #     load_dotenv()
