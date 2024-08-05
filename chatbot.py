@@ -6,7 +6,7 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.llms.base import LLM
-from langchain_community.embeddings import HuggingFaceInstructEmbeddings
+from langchain_community.embeddings.huggingface import HuggingFaceInstructEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
@@ -64,11 +64,11 @@ def extrair_trechos_texto(raw_text):
 
 def criar_vectorstore(chunks):
     embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
-    vectorstore = FAISS.from_texts(texts=chunks, embeddings=embeddings)
+    vectorstore = FAISS.from_texts(texts=chunks, embedding=embeddings)
     return vectorstore
 
 def create_conversation_chain(vectorstore):
-    llm = ChatGroq(client)
+    llm = Groq(client)
     memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
