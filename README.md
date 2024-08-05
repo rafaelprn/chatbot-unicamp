@@ -9,4 +9,5 @@
 
 - Clone o repositório
 - Certifique-se de que todas as dependências de requirements.txt estão instaladas
+- Certifique-se de que sua chave da GroqCloud está definida nas Variáveis de Ambiente
 - Execute o comando: streamlit run chatbot.py
