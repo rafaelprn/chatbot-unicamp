@@ -2,3 +2,4 @@ streamlit
 groq
 pymupdf
 langchain
+python-dotenv
