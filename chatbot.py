@@ -83,6 +83,7 @@ if prompt := st.chat_input("Insira aqui sua dúvida..."): # Input do usuário
                 for m in st.session_state.messages # Para cada mensagem no histórico do chat
             ],
             max_tokens=200, # Número máximo de tokens
+            temperature=0.2, # Quanto menor a temperatura, mais conservador é o modelo
             stream=True, # Stream de respostas
         )
 
